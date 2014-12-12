@@ -109,7 +109,7 @@ public class NetworkDataSet {
         fullNetworkSize *= fullNetworkSize - 1;
         fullNetworkSize /= 2;
         fullNetworkSize -= dataSet.size() + (dataDescription.directed ? 0 : dataSet.size());
-        adder.init(fullNetworkSize / 2);
+        adder.init(fullNetworkSize);
         
         this.dataDescription.addClass(NetworkDataSet.classZero);
         
