@@ -7,7 +7,9 @@ package marcelina.kokot.learn.data;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 
 /**
@@ -63,9 +65,9 @@ public class NetworkRuleResolver {
         reader.close();
         
         // Add predicates
-        buffer.append(String.format("m.add predicate: \"%s\", types: [ArgumentType.UniqueID, ArgumentType.String]\n", NetworkDataSet.attribute1Name));
-        buffer.append(String.format("m.add predicate: \"%s\", types: [ArgumentType.UniqueID, ArgumentType.String]\n", NetworkDataSet.attribute2Name));
-        buffer.append(String.format("m.add predicate: \"%s\", types: [ArgumentType.UniqueID, ArgumentType.String]\n", NetworkDataSet.className));
+        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.UniqueID, ConstantType.String]\n", NetworkDataSet.attribute1Name));
+        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.UniqueID, ConstantType.String]\n", NetworkDataSet.attribute2Name));
+        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.UniqueID, ConstantType.String]\n", NetworkDataSet.className));
         
         // Add rules
         for(NetworkRule rule : rules) {
@@ -73,7 +75,7 @@ public class NetworkRuleResolver {
         }
         
         // Data insert
-        buffer.append("def partition = new Partition(0);\ndef insert = data.getInserter(" + NetworkDataSet.attribute1Name + ", partition);\n");
+        buffer.append("def partition = data.getPartition(\"0\");\ndef insert = data.getInserter(" + NetworkDataSet.attribute1Name + ", partition);\n");
         
         int z = 1;
         for (NetworkDataRecord record : test.dataSet) {
@@ -102,9 +104,13 @@ public class NetworkRuleResolver {
         
         // Prepare script
         this.groovyScript = buffer.toString();
-
+        
+        PrintWriter out = new PrintWriter("groovy-script.groovy");
+        out.print(this.groovyScript);
+        out.close();
+        
         // Run script
-        this.data = (Object[])(shell.evaluate(this.groovyScript));
+        this.data = (Object[])shell.run(new File("groovy-script.groovy"), new LinkedList());
         
         // Return data
         return this.data[1];

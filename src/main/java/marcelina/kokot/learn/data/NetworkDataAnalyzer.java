@@ -129,21 +129,21 @@ public class NetworkDataAnalyzer {
         // Weka rules
         htmlDocument.println("<h3>Weka genreted rules</h3>");
         htmlDocument.println("<div style='font-family: \"Lucida Console\", Monaco, monospace'>");
-        htmlDocument.println(generator.wekaModelOutput.replaceAll("\\r?\\n", "<br />").replace("  ", " &emsp;"));
-        htmlDocument.append("</div>");
+        htmlDocument.println(generator.wekaModelOutput.replaceAll("\\r?\\n", "<br />").replaceAll("  ", " &emsp;"));
+        htmlDocument.println("</div>");
         
         // PSL model
         htmlDocument.println("<h3>PSL model</h3>");
         htmlDocument.println("<div style='font-family: \"Lucida Console\", Monaco, monospace'>");
-        htmlDocument.println(((String)(resolver.data[0])).replaceAll("\\r?\\n", "<br />").replace("  ", " &emsp;"));
-        htmlDocument.append("</div>");
+        htmlDocument.println(((String)(resolver.data[0])).replaceAll("\\r?\\n", "<br />").replaceAll("  ", " &emsp;"));
+        htmlDocument.println("</div>");
         
         // Groovy script
         htmlDocument.println("<h3>Groovy script</h3>");
         htmlDocument.println("<div style='font-family: \"Lucida Console\", Monaco, monospace'>");
-        htmlDocument.println(((String)(resolver.groovyScript)).replaceAll("\\r?\\n", "<br />").replace("  ", " &emsp;"));
-        htmlDocument.append("</div>");
-        htmlDocument.append("</body></html>");
+        htmlDocument.println(((String)(resolver.groovyScript)).replaceAll("\\r?\\n", "<br />").replaceAll("  ", " &emsp;"));
+        htmlDocument.println("</div>");
+        htmlDocument.println("</body></html>");
         htmlDocument.close();
         
     }
@@ -213,7 +213,7 @@ public class NetworkDataAnalyzer {
     }
     
     public static void main(String[] args) throws Exception {
-        //NetworkDataAnalyzer.runAnalisys("D:\\data\\d_CSphd_class.txt", 20, 0.001, 0.001, 0.5, NetworkClassZeroAdder.getRandomZeroAdder(800), "D:\\AAAA_report.html");
+        //NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\d_CSphd_class.txt", 20, 0.001, 0.001, 0.5, NetworkClassZeroAdder.getRandomZeroAdder(800), "C:\\mgr_data\\AAAA2_report.html");
     }
     
 }
