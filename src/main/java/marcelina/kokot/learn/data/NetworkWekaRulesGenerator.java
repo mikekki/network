@@ -145,7 +145,7 @@ public class NetworkWekaRulesGenerator {
                         }
                     }
                     rule.confidence = weights[i];
-                    
+                    System.out.println(rule);
                     result.add(rule);
                 }
             }

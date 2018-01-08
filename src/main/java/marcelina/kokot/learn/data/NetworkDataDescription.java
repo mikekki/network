@@ -1,5 +1,6 @@
 package marcelina.kokot.learn.data;
 
+import cern.colt.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,10 +35,10 @@ class NetworkDataDescription {
     // weka apriori demands nominal values - to ensure that - each label and class has prefix
     
     // label prefix
-    private static final String LABEL_PREFIX = "label_";
+    static final String LABEL_PREFIX = "label_";
     
     // class prefix
-    private static final String CLASS_PREFIX = "class_";
+    static final String CLASS_PREFIX = "class_";
 
     /**
      * Init empty description
@@ -76,6 +77,7 @@ class NetworkDataDescription {
             labelsConnections.put(record.attribute1Label, connectedLabels);
         }
         connectedLabels.add(record.attribute2Label);
+        NetworkIdMapper.register(record);
         
         return record;
     }
@@ -114,7 +116,12 @@ class NetworkDataDescription {
     }
     
     String getLabel(Integer node) {
-        return nodeLabelMapping.get(node);
+        String value = nodeLabelMapping.get(node);
+        if (null == value) {
+            this.addLabel(node, "NA");
+            value = nodeLabelMapping.get(node);
+        } 
+        return value;
     }
     
 }

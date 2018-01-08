@@ -65,9 +65,10 @@ public class NetworkRuleResolver {
         reader.close();
         
         // Add predicates
-        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.UniqueID, ConstantType.String]\n", NetworkDataSet.attribute1Name));
-        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.UniqueID, ConstantType.String]\n", NetworkDataSet.attribute2Name));
-        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.UniqueID, ConstantType.String]\n", NetworkDataSet.className));
+        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.Integer, ConstantType.String]\n", NetworkDataSet.attribute1Name));
+        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.Integer, ConstantType.String]\n", NetworkDataSet.attribute2Name));
+        buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.Integer, ConstantType.String]\n", NetworkDataSet.className));
+        //buffer.append(String.format("m.add predicate: \"%s\", types: [ConstantType.Integer, ConstantType.String]\n", "MapClass"));
         
         // Add rules
         for(NetworkRule rule : rules) {
@@ -75,6 +76,8 @@ public class NetworkRuleResolver {
         }
         
         // Data insert
+        buffer.append(this.appendData(test.dataSet));
+        /**
         buffer.append("def partition = data.getPartition(\"0\");\ndef insert = data.getInserter(" + NetworkDataSet.attribute1Name + ", partition);\n");
         
         int z = 1;
@@ -88,11 +91,14 @@ public class NetworkRuleResolver {
         for (NetworkDataRecord record : test.dataSet) {
             buffer.append(String.format("insert.insert(%d, \"%s\");\n", z++, record.attribute2Label));
         }
+        **/
         
         // Weight calculation
         String upperAt1 = "" + Character.toUpperCase(NetworkDataSet.attribute1Name.charAt(0)) + NetworkDataSet.attribute1Name.substring(1);
         String upperAt2 = "" + Character.toUpperCase(NetworkDataSet.attribute2Name.charAt(0)) + NetworkDataSet.attribute2Name.substring(1);
-        buffer.append(String.format("Database db = data.getDatabase(partition, [%s, %s] as Set);", upperAt1, upperAt2));
+        String upperCn = "" + Character.toUpperCase(NetworkDataSet.className.charAt(0)) + NetworkDataSet.className.substring(1);
+        
+        buffer.append(String.format("Database db = data.getDatabase(partition, [%s] as Set);", upperCn));
         buffer.append("LazyMPEInference inferenceApp = new LazyMPEInference(m, db, config);\ninferenceApp.mpeInference();\ninferenceApp.close();");
         
         // Load tail script
@@ -150,7 +156,7 @@ public class NetworkRuleResolver {
                         pre =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute2Name, rule.attribute2label);
                     }
                 }
-                post =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute1Name, rule.classValue);
+                post =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute1Name, rule.attribute1label);
             }
             if (rule.ruleOutput == NetworkDataSet.attribute2Name) {
                 if (rule.attribute1label != null && rule.classValue != null) {
@@ -165,6 +171,24 @@ public class NetworkRuleResolver {
                 post =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute2Name, rule.attribute2label);
             }
             return String.format("m.add rule : (%s) >> (%s), weight: " + rule.confidence + "\n", pre, post);
+    }
+
+    protected String appendData(LinkedList<NetworkDataRecord> dataSet) {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("def partition = data.getPartition(\"0\");\ndef insert = data.getInserter(" + NetworkDataSet.attribute1Name + ", partition);\n");
+        
+        int z = 1;
+        for (NetworkDataRecord record : dataSet) {
+            buffer.append(String.format("insert.insert(%d, \"%s\");\n", z++, record.attribute1Label));
+        }
+        
+        buffer.append("insert = data.getInserter(" + NetworkDataSet.attribute2Name + ", partition);");
+
+        z = 1;
+        for (NetworkDataRecord record : dataSet) {
+            buffer.append(String.format("insert.insert(%d, \"%s\");\n", z++, record.attribute2Label));
+        }
+        return buffer.toString();
     }
     
 }

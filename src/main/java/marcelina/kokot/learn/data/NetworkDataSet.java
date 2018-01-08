@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
 import weka.core.Instances;
@@ -43,6 +44,8 @@ public class NetworkDataSet {
      */
     public static NetworkDataSet getFromFile(String labelsFile, String connectionFile, boolean directedNetwork) {
         try {
+            NetworkIdMapper.restart();
+            
             // Description - special object containig data about set: classes, labels ...
             NetworkDataDescription description = new NetworkDataDescription();
             // List of data records
@@ -55,7 +58,6 @@ public class NetworkDataSet {
             BufferedReader labelReader = new BufferedReader(new FileReader(labelsFile));
             String line = "";
             while ((line = labelReader.readLine()) != null) {
-                
                 // Here is split by space
                 String[] vals = line.split(" ");
                 
@@ -85,7 +87,13 @@ public class NetworkDataSet {
                 String classValue = vals[2];
                 
                 // add data set, update description
-                dataSet.add(description.processRecord(at1, at2, classValue));
+                NetworkDataRecord record = description.processRecord(at1, at2, classValue);
+                
+                if (record.isNa()) {
+                    //continue;
+                }
+                
+                dataSet.add(record);
                 if (!directedNetwork) {
                     // if network is not directed - add the same record with changed nodes
                     dataSet.add(description.processRecord(at2, at1, classValue));
@@ -95,6 +103,7 @@ public class NetworkDataSet {
             
             return new NetworkDataSet(description, dataSet);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e.fillInStackTrace());
         }
     }
@@ -142,15 +151,23 @@ public class NetworkDataSet {
         Random rand = new Random();
         int dataSize = this.dataSet.size();
         
+        
         // calculate size
         int size = (int)(cut * dataSize);
-        
+       
+        Collections.shuffle(dataSet);
         // data set which will be returned
-        LinkedList<NetworkDataRecord> cutRecords = new LinkedList<NetworkDataRecord>();
-        // process till cutRecords will be filled with #size records
-        for (int i = 0 ; i< size; i++) {
-            cutRecords.add(this.dataSet.remove(rand.nextInt(dataSize--)));
-        }
+//        LinkedList<NetworkDataRecord> cutRecords = new LinkedList<NetworkDataRecord>();
+//        // process till cutRecords will be filled with #size records
+//        for (int i = 0 ; i< size; i++) {
+//            if (i % 100 == 0) {
+//                System.out.println("DONE: " + i + "/" + size);
+//            }
+//            cutRecords.add(this.dataSet.remove(rand.nextInt(dataSize--)));
+//        }
+        LinkedList<NetworkDataRecord> cutRecords;
+        cutRecords = new LinkedList<NetworkDataRecord>(dataSet.subList(0, size));
+        dataSet = new LinkedList<NetworkDataRecord>(dataSet.subList(size + 1, dataSize - 1));
         
         return new NetworkDataSet(dataDescription, cutRecords);
     }

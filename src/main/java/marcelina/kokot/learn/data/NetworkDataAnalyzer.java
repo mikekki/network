@@ -2,7 +2,9 @@ package marcelina.kokot.learn.data;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 /**
  *
@@ -27,17 +29,28 @@ public class NetworkDataAnalyzer {
         int extendedSize;
         int learnSize;
         
+        System.out.println("START");
+        
         // load data set
-        NetworkDataSet set = NetworkDataSet.getFromFile(classFile, classFile.replaceAll("_class.", "_network."), false);
+        NetworkDataSet set = NetworkDataSet.getFromFile(classFile, classFile.replaceAll("_class.", "_network."), true);
+        
+        System.out.println("LOADED");
+        
         initialSize = set.dataSet.size();
         
         // add zero class
-        set.addClassZero(adder);
+        if (adder != null) {
+            set.addClassZero(adder);
+        }
         extendedSize = set.dataSet.size();
+        
+        System.out.println("ADDED ZERO CLASS");
         
         // split data into two sets
         NetworkDataSet test = set.split(1 - split);
         learnSize = test.dataSet.size();
+        
+        System.out.println("SPLITTED");
         
         // create rule generator
         NetworkWekaRulesGenerator generator = new NetworkWekaRulesGenerator(set);
@@ -45,11 +58,15 @@ public class NetworkDataAnalyzer {
         // generate rules
         LinkedList<NetworkRule> rules = generator.generateRules(numberOfRules, confidence, support);
         
+        System.out.println("RULES GENERATED");
+        
         // generate PSL resolver
-        NetworkRuleResolver resolver = new NetworkRuleResolver();
+        NetworkRuleResolver resolver = new NetworkLabelRuleResolver();
         
         // resolve
         LinkedList<Object[]> data = (LinkedList<Object[]>) (resolver.resolve(rules, test));
+        
+        System.out.println("RESOLVED");
         
         // analysis - classification table
         int[][] analysis = NetworkDataAnalyzer.analyze(data, test);
@@ -87,7 +104,7 @@ public class NetworkDataAnalyzer {
         // Results (table)
         htmlDocument.println("<h3>Results (row - actual/ column - classfied):</h3>");
         htmlDocument.println("<table border=1><tr>");
-        Object[] classes = test.dataDescription.classes.toArray();
+        Object[] classes = test.dataDescription.labels.toArray();
         int correct = 0;
         int sum = 0;
         for(int i = 0; i <= classes.length; i++){
@@ -121,8 +138,9 @@ public class NetworkDataAnalyzer {
         {
             Object[] record = data.get(i);
             Integer testRecordNo = Integer.parseInt(record[0].toString());
-            NetworkDataRecord dataRecord = test.dataSet.get(testRecordNo.intValue() - 1);
-            htmlDocument.println(String.format("<tr><td>%s</td><td>%s, %s</td><td>%s</td><td>%s</td><td>%s</td></tr>", testRecordNo.toString(), dataRecord.attribute1Label, dataRecord.attribute2Label, record[1].toString(), record[2].toString(), dataRecord.className));
+            //System.out.println(testRecordNo.intValue());
+            //NetworkDataRecord dataRecord = test.dataSet.get(testRecordNo.intValue() - 1);
+            //htmlDocument.println(String.format("<tr><td>%s</td><td>%s, %s</td><td>%s</td><td>%s</td><td>%s</td></tr>", testRecordNo.toString(), dataRecord.attribute1Label, dataRecord.attribute2Label, record[1].toString(), record[2].toString(), dataRecord.className));
         }
         htmlDocument.println("</table>");
         
@@ -165,23 +183,26 @@ public class NetworkDataAnalyzer {
         int size = test.dataSet.size();
         
         // get classes number
-        int classesNum = test.dataDescription.classes.size();
+        int classesNum = test.dataDescription.labels.size();
         
         // mapping class name to int
         HashMap<String, Integer> classToIntMap = new HashMap<String, Integer>();
         
         // generate mapping
         int it = 0;
-        for(String classString : test.dataDescription.classes){
+        for(String classString : test.dataDescription.labels){
             classToIntMap.put(classString, it++);
         }
         
         // Cast data to list
         LinkedList<Object[]> resultData = (LinkedList<Object[]>) result;
         // classification array - index is test record number - 1, value is retrived class
-        String[] classification = new String[size];
-        // each record highest probablity value
-        double[] values  = new double[size];
+        
+        HashMap<Integer, String> classification;
+        classification = new LinkedHashMap<Integer, String>();   
+        
+        HashMap<Integer, Double> values;
+        values = new LinkedHashMap<Integer, Double>();
         
         for (Object[] o : resultData) {
             int testId = ((Integer)o[0]).intValue() - 1;
@@ -189,31 +210,30 @@ public class NetworkDataAnalyzer {
             // strip from ' - PSL adds it
             String classify = o[1].toString().replaceAll("'", "");
             // if probability is higher - change record classification
-            if (values[testId] < value) {
-                values[testId] = value;
-                classification[testId] = classify;
+            if (null == values.get(testId) || values.get(testId) < value) {
+                values.put(testId, value);
+                classification.put(testId, classify);
             }
         }
         
         // result data
         int[][] results = new int[classesNum][classesNum];
         
-        for(int i = 0; i < classification.length; i++) {
-            if (classification[i] != null) {
-                // actual record class
-                int real = classToIntMap.get(test.dataSet.get(i).className);
+        for (Map.Entry<Integer,String> entry : classification.entrySet()) {
+            NetworkDataRecord record = NetworkIdMapper.toRecord(entry.getKey());
+            int real = classToIntMap.get(record.attribute1Label);
                 // retrived class
-                int classfied = classToIntMap.get(classification[i]);
+                int classfied = classToIntMap.get(entry.getValue());
                 // add single classification result
                 results[real][classfied]++;
-            }
         }
         
         return results;
     }
     
     public static void main(String[] args) throws Exception {
-        //NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\d_CSphd_class.txt", 20, 0.001, 0.001, 0.5, NetworkClassZeroAdder.getRandomZeroAdder(800), "C:\\mgr_data\\AAAA2_report.html");
+        NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\SocialNetwork_class.txt", 15, 0.001, 0.001, 0.90, null/*NetworkClassZeroAdder.getRandomZeroAdder(200)*/, "C:\\mgr_data\\SN_report.html");
+        //NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\SocialNetwork_class.txt", 20, 0.001, 0.001, 0.5, NetworkClassZeroAdder.getRandomZeroAdder(800), "C:\\mgr_data\\AAAA2_report.html");
     }
     
 }
