@@ -213,7 +213,7 @@ public class NetworkDataAnalyzer {
     }
     
     public static void main(String[] args) throws Exception {
-        //NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\d_CSphd_class.txt", 20, 0.001, 0.001, 0.5, NetworkClassZeroAdder.getRandomZeroAdder(800), "C:\\mgr_data\\AAAA2_report.html");
+        NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\learn_CitationCategories_class.txt", 20, 0.001, 0.001, 0.8, NetworkClassZeroAdder.getRandomZeroAdder(2500), "C:\\mgr_data\\CC2X_report.html");
     }
     
 }

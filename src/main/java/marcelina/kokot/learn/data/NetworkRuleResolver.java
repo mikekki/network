@@ -8,9 +8,12 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -74,20 +77,7 @@ public class NetworkRuleResolver {
             buffer.append(this.createRuleScript(rule));
         }
         
-        // Data insert
-        buffer.append("def partition = data.getPartition(\"0\");\ndef insert = data.getInserter(" + NetworkDataSet.attribute1Name + ", partition);\n");
-        
-        int z = 1;
-        for (NetworkDataRecord record : test.dataSet) {
-            buffer.append(String.format("insert.insert(%d, \"%s\");\n", z++, record.attribute1Label));
-        }
-        
-        buffer.append("insert = data.getInserter(" + NetworkDataSet.attribute2Name + ", partition);");
-
-        z = 1;
-        for (NetworkDataRecord record : test.dataSet) {
-            buffer.append(String.format("insert.insert(%d, \"%s\");\n", z++, record.attribute2Label));
-        }
+        buffer.append(this.appendData(test.dataSet));
         
         // Weight calculation
         String upperAt1 = "" + Character.toUpperCase(NetworkDataSet.attribute1Name.charAt(0)) + NetworkDataSet.attribute1Name.substring(1);
@@ -150,7 +140,7 @@ public class NetworkRuleResolver {
                         pre =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute2Name, rule.attribute2label);
                     }
                 }
-                post =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute1Name, rule.classValue);
+                post =  String.format("%s(X, \"%s\")", NetworkDataSet.attribute1Name, rule.attribute1label);
             }
             if (rule.ruleOutput == NetworkDataSet.attribute2Name) {
                 if (rule.attribute1label != null && rule.classValue != null) {
@@ -166,5 +156,50 @@ public class NetworkRuleResolver {
             }
             return String.format("m.add rule : (%s) >> (%s), weight: " + rule.confidence + "\n", pre, post);
     }
+    
+    
+    protected String appendData(LinkedList<NetworkDataRecord> dataSet) {
+        PrintWriter pw = null;
+        int z = 1;
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("def partition = data.getPartition(\"0\");\n");
+        try {
+            buffer.append("def insert = data.getInserter(" + NetworkDataSet.attribute1Name + ", partition);\n");
+            pw = new PrintWriter(new File("label1Data"));
+            for (NetworkDataRecord record : dataSet) {
+                pw.println(String.format("%d %s", z++, record.attribute1Label));
+            }
+            pw.close();
+            buffer.append("BufferedReader labelReader1 = new BufferedReader(new FileReader(\"label1Data\"));\n" +
+"            String line = \"\";\n" +
+"            while ((line = labelReader1.readLine()) != null) {\n" +
+"                String[] vals = line.split(\" \");\n" +
+"                insert.insert(Integer.parseInt(vals[0]), vals[1]);\n" +
+"            }\n");
+            // buffer.append(String.format("insert.insert(%d, \"%s\");\n", record.hashCode(), record.className));
+            
+            z = 1;
+            buffer.append("insert = data.getInserter(" + NetworkDataSet.attribute2Name + ", partition);\n");
+            pw = new PrintWriter(new File("label2Data"));
+            for (NetworkDataRecord record : dataSet) {
+                pw.println(String.format("%d %s", z++, record.attribute2Label));
+            }
+            pw.close();
+            buffer.append("BufferedReader labelReader2 = new BufferedReader(new FileReader(\"label2Data\"));\n" +
+"            line = \"\";\n" +
+"            while ((line = labelReader2.readLine()) != null) {\n" +
+"                String[] vals = line.split(\" \");\n" +
+"                insert.insert(Integer.parseInt(vals[0]), vals[1]);\n" +
+"            }\n");
+            
+            return buffer.toString();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(NetworkRuleResolver.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            pw.close();
+        }
+        return "";
+    }
+    
     
 }
