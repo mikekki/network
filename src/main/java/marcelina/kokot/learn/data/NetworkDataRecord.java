@@ -39,8 +39,5 @@ class NetworkDataRecord {
     public int hashCode() {
         return NetworkDataRecord.MAX_ATTRIBUTE_NUMBER * attribute1.intValue()
                 + attribute2.intValue();
-    }
-    
-    
-    
+    }       
 }

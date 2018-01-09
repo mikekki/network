@@ -32,7 +32,9 @@ public class NetworkDataAnalyzer {
         initialSize = set.dataSet.size();
         
         // add zero class
-        set.addClassZero(adder);
+        if (null != adder) {
+            set.addClassZero(adder);
+        }
         extendedSize = set.dataSet.size();
         
         // split data into two sets
@@ -201,6 +203,13 @@ public class NetworkDataAnalyzer {
         for(int i = 0; i < classification.length; i++) {
             if (classification[i] != null) {
                 // actual record class
+//                String realClass = test.dataSet.get(i).className;
+//                System.out.println(realClass);
+//                if (!realClass.equals("class_NotFriend") && !realClass.equals("class_Friend")) {
+//                    System.out.println("FAIL :" + realClass);
+//                    continue;
+//                }
+                
                 int real = classToIntMap.get(test.dataSet.get(i).className);
                 // retrived class
                 int classfied = classToIntMap.get(classification[i]);
@@ -213,7 +222,7 @@ public class NetworkDataAnalyzer {
     }
     
     public static void main(String[] args) throws Exception {
-        NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\learn_CitationCategories_class.txt", 20, 0.001, 0.001, 0.8, NetworkClassZeroAdder.getRandomZeroAdder(2500), "C:\\mgr_data\\CC2X_report.html");
+        NetworkDataAnalyzer.runAnalisys("C:\\mgr_data\\Friendship_class.txt", 20, 0.001, 0.001, 0.8, null/*NetworkClassZeroAdder.getRandomZeroAdder(2500)*/, "C:\\mgr_data\\FSXX_report.html");
     }
     
 }
