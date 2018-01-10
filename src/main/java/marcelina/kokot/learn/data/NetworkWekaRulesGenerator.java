@@ -4,6 +4,7 @@
  */
 package marcelina.kokot.learn.data;
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import weka.associations.Apriori;
@@ -151,8 +152,25 @@ public class NetworkWekaRulesGenerator {
             }
             i++;
         }
-        return result;
+        return this.filterRules(result);
        
+    }
+    
+    public LinkedList<NetworkRule> filterRules(LinkedList<NetworkRule> input) {
+        NetworkRule[] rules = new NetworkRule[input.size()];
+        rules = input.toArray(rules);
+        LinkedList<NetworkRule> output = new LinkedList<NetworkRule>();
+        for (int z = rules.length - 1; z >=0; z--) {
+            boolean unique = true;
+            for (int y = 0; y < z && unique; y++) {
+                unique = !rules[z].samePredicates(rules[y]);
+            }
+            if (unique) {
+                output.add(rules[z]);
+            }
+        } 
+        Collections.reverse(output);
+        return output; 
     }
     
 }

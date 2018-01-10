@@ -56,6 +56,20 @@ public class NetworkRule {
         return String.format("%s => %s : %f", conditions.substring(0, conditions.length() - 2), conclusion, confidence);
     }
     
-    
+    public boolean samePredicates(NetworkRule rule) {
+        if (this.ruleOutput.equals(NetworkDataSet.attribute1Name) && (this.attribute1label == null ? rule.attribute1label != null : !this.attribute1label.equals(rule.attribute1label))) {
+            return false;
+        }
+        
+        if (this.ruleOutput.equals(NetworkDataSet.attribute2Name) && (this.attribute2label == null ? rule.attribute2label != null : !this.attribute2label.equals(rule.attribute2label))) {
+            return false;
+        }
+        
+        if (this.ruleOutput.equals(NetworkDataSet.className) && (this.classValue == null ? rule.classValue != null : !this.classValue.equals(rule.classValue))) {
+            return false;
+        }
+        
+        return true;
+    }
     
 }
